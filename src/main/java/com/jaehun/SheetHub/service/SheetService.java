@@ -5,6 +5,7 @@ import com.jaehun.SheetHub.domain.Sheet;
 import com.jaehun.SheetHub.domain.sheetdto.CreateSheetDto;
 import com.jaehun.SheetHub.domain.sheetdto.ResponseSheetDto;
 import com.jaehun.SheetHub.exception.AuthException;
+import com.jaehun.SheetHub.exception.NotFoundException;
 import com.jaehun.SheetHub.repository.MemberRepository;
 import com.jaehun.SheetHub.repository.SheetRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class SheetService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Member member = memberRepository.findByUsername(username)
-                .orElseThrow(() -> new AuthException("member not found"));
+                .orElseThrow(() -> new NotFoundException("일치하는 멤버가 없습니다."));
 
         Sheet sheet = new Sheet(member, dto.getTitle(), dto.getArtist());
         sheetRepository.save(sheet);
@@ -60,6 +61,19 @@ public class SheetService {
 
     @Transactional
     public void deleteById(Long id){
-        sheetRepository.deleteById(id);
+        // sheet id로 member얻기
+        Sheet sheet = sheetRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("일치하는 악보가 없습니다."));
+        Member findMemberFromSheet = sheet.getMember();
+
+        // 현재 토큰에서 member얻기
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        // 두 멤버 이름으로 비교하기
+        if(findMemberFromSheet.getUsername().equals(username)){
+            sheetRepository.deleteById(id);
+        } else{
+            throw new AuthException("악보 삭제 권한이 없습니다.");
+        }
     }
 }

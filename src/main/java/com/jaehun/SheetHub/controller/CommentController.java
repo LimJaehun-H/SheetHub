@@ -5,6 +5,7 @@ import com.jaehun.SheetHub.domain.commentdto.ResponseCommentDto;
 import com.jaehun.SheetHub.domain.commentdto.ResponseMyCommentsDto;
 import com.jaehun.SheetHub.domain.commentdto.UpdateCommentDto;
 import com.jaehun.SheetHub.service.CommentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,13 +19,13 @@ public class CommentController {
     // 댓글 등록
     @PostMapping("/sheetHub/sheets/{sheetId}/comments")
     public ResponseCommentDto addComment(@PathVariable Long sheetId
-                                       , @RequestBody CreateCommentDto dto) {
+                                       , @Valid @RequestBody CreateCommentDto dto) {
         return commentService.save(sheetId, dto);
     }
 
     // 댓글 수정
     @PutMapping("/sheetHub/sheets/{sheetId}/comments/{commentId}")
-    public ResponseCommentDto updateComment(@PathVariable Long commentId, @RequestBody UpdateCommentDto dto) {
+    public ResponseCommentDto updateComment(@PathVariable Long commentId, @Valid @RequestBody UpdateCommentDto dto) {
         return commentService.update(commentId, dto);
     }
 

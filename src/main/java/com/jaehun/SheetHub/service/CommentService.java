@@ -8,6 +8,7 @@ import com.jaehun.SheetHub.domain.commentdto.ResponseMyCommentsDto;
 import com.jaehun.SheetHub.domain.commentdto.ResponseCommentDto;
 import com.jaehun.SheetHub.domain.commentdto.UpdateCommentDto;
 import com.jaehun.SheetHub.exception.AuthException;
+import com.jaehun.SheetHub.exception.NotFoundException;
 import com.jaehun.SheetHub.repository.CommentRepository;
 import com.jaehun.SheetHub.repository.MemberRepository;
 import com.jaehun.SheetHub.repository.SheetRepository;
@@ -41,10 +42,10 @@ public class CommentService {
     @Transactional
     public ResponseCommentDto save(Long sheetId, CreateCommentDto dto){
         Sheet sheet = sheetRepository.findById(sheetId)
-                .orElseThrow(() -> new AuthException("Sheet Not Found"));
+                .orElseThrow(() -> new NotFoundException("일치하는 악보가 없습니다."));
         String username = getCurrentUserName();
         Member member = memberRepository.findByUsername(username)
-                .orElseThrow(() -> new AuthException("Member Not Found"));
+                .orElseThrow(() -> new NotFoundException("일치하는 회원이 없습니다."));
         Comment comment = new Comment(dto.getComment(), sheet, member);
 
         commentRepository.save(comment);
@@ -55,28 +56,38 @@ public class CommentService {
     @Transactional
     public ResponseCommentDto update(Long commentId, UpdateCommentDto dto){
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new AuthException("Comment Not Found"));
+                .orElseThrow(() -> new NotFoundException("일치하는 댓글이 없습니다."));
         String username = getCurrentUserName();
-        comment.update(dto.getComment());
-        return new ResponseCommentDto(commentId, comment.getComment(), username);
+        if(comment.getMember().getUsername().equals(username)){
+            comment.update(dto.getComment());
+            return new ResponseCommentDto(commentId, comment.getComment(), username);
+        }else{
+            throw new AuthException("댓글 수정 권한이 없습니다.");
+        }
     }
 
     private String getCurrentUserName() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return username;
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
     // 댓글 삭제
     @Transactional
     public void delete(Long commentId){
-        commentRepository.deleteById(commentId);
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("일치하는 댓글이 없습니다."));
+        String username = getCurrentUserName();
+        if(comment.getMember().getUsername().equals(username)) {
+            commentRepository.deleteById(commentId);
+        }else{
+            throw new AuthException("댓글 삭제 권한이 없습니다.");
+        }
     }
 
     // 내 댓글 모아보기
     public List<ResponseMyCommentsDto> findMyComments(){
         String username = getCurrentUserName();
         Member member = memberRepository.findByUsername(username)
-                .orElseThrow(() -> new AuthException("Member Not Found"));
+                .orElseThrow(() -> new NotFoundException("일치하는 회원이 없습니다."));
         return commentRepository.findByMember(member).stream()
                 .map(c->new ResponseMyCommentsDto(c.getId(), c.getComment()))
                 .collect(Collectors.toList());

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SheetHub</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --bg: #0e0e0e;
+            --surface: #1a1a1a;
+            --border: #2a2a2a;
+            --accent: #e8ff47;
+            --accent-dim: #b8cc30;
+            --text: #f0f0f0;
+            --text-muted: #888;
+            --danger: #ff4d4d;
+            --radius: 8px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 32px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+        }
+
+        .logo { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; color: var(--accent); }
+        .logo span { color: var(--text-muted); }
+        .nav-right { display: flex; gap: 12px; align-items: center; }
+        #username-display { font-size: 13px; color: var(--text-muted); }
+
+        button {
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+
+        .btn-primary { background: var(--accent); color: #0e0e0e; padding: 9px 20px; }
+        .btn-primary:hover { background: var(--accent-dim); }
+        .btn-ghost { background: transparent; color: var(--text-muted); padding: 9px 16px; border: 1px solid var(--border); }
+        .btn-ghost:hover { color: var(--text); border-color: #444; }
+        .btn-danger { background: transparent; color: var(--danger); padding: 6px 12px; border: 1px solid var(--danger); font-size: 12px; }
+        .btn-danger:hover { background: var(--danger); color: #fff; }
+        .btn-sm { background: var(--surface); color: var(--text-muted); padding: 6px 12px; border: 1px solid var(--border); font-size: 12px; }
+        .btn-sm:hover { color: var(--text); }
+
+        main { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .auth-container { max-width: 400px; margin: 60px auto 0; }
+        .auth-container h2 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .auth-container p { color: var(--text-muted); margin-bottom: 32px; font-size: 14px; }
+
+        .form-group { margin-bottom: 16px; }
+
+        label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        input {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        input:focus { border-color: var(--accent); }
+
+        .auth-actions { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
+        .auth-actions button { width: 100%; padding: 12px; font-size: 15px; }
+        .switch-auth { text-align: center; margin-top: 20px; font-size: 13px; color: var(--text-muted); }
+        .switch-auth a { color: var(--accent); cursor: pointer; }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 20px;
+            font-size: 14px;
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.2s;
+            max-width: 300px;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-color: var(--accent); }
+        .toast.error { border-color: var(--danger); }
+
+        .sheet-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+        .sheet-header h2 { font-size: 24px; font-weight: 700; }
+        .search-bar { display: flex; gap: 8px; margin-bottom: 24px; }
+        .search-bar input { flex: 1; }
+        .sheet-grid { display: grid; gap: 12px; }
+
+        .sheet-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        .sheet-card:hover { border-color: #444; }
+        .sheet-card-info h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .sheet-card-info span { font-size: 13px; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+        .sheet-card-actions { display: flex; gap: 8px; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal h3 { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+        .modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+
+        .comment-list { margin-top: 20px; display: grid; gap: 10px; }
+
+        .comment-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .comment-content { flex: 1; }
+        .comment-author { font-size: 11px; color: var(--accent); margin-bottom: 4px; font-family: 'Space Mono', monospace; }
+        .comment-text { font-size: 14px; }
+        .comment-btns { display: flex; gap: 6px; flex-shrink: 0; }
+
+        .edit-input {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 8px 10px;
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            outline: none;
+            margin-top: 6px;
+        }
+
+        .empty-state { text-align: center; padding: 60px 0; color: var(--text-muted); }
+        .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+
+        .my-comment-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 10px;
+        }
+        .my-comment-item .comment-id { font-size: 11px; color: var(--text-muted); font-family: 'Space Mono', monospace; margin-bottom: 6px; }
+
+        .divider { height: 1px; background: var(--border); margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">Sheet<span>Hub</span></div>
+    <div class="nav-right">
+        <span id="username-display"></span>
+        <button class="btn-ghost" id="my-comments-btn" style="display:none" onclick="showMyComments()">내 댓글</button>
+        <button class="btn-ghost" id="logout-btn" style="display:none" onclick="logout()">로그아웃</button>
+        <button class="btn-primary" id="add-sheet-btn" style="display:none" onclick="openAddSheet()">+ 악보 등록</button>
+    </div>
+</nav>
+
+<main>
+    <!-- 로그인 -->
+    <div class="section active" id="section-login">
+        <div class="auth-container">
+            <h2>다시 오셨군요 👋</h2>
+            <p>로그인하고 드럼 악보를 즐겨보세요.</p>
+            <div class="form-group">
+                <label>아이디</label>
+                <input type="text" id="login-username" placeholder="username" />
+            </div>
+            <div class="form-group">
+                <label>비밀번호</label>
+                <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()" />
+            </div>
+            <div class="auth-actions">
+                <button class="btn-primary" onclick="login()">로그인</button>
+            </div>
+            <div class="switch-auth">
+                계정이 없으신가요? <a onclick="showSection('section-join')">회원가입</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 회원가입 -->
+    <div class="section" id="section-join">
+        <div class="auth-container">
+            <h2>시작해볼까요 🥁</h2>
+            <p>계정을 만들고 드럼 악보를 감상해보세요.</p>
+            <div class="form-group">
+                <label>아이디</label>
+                <input type="text" id="join-username" placeholder="username" />
+            </div>
+            <div class="form-group">
+                <label>비밀번호</label>
+                <input type="password" id="join-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')join()" />
+            </div>
+            <div class="auth-actions">
+                <button class="btn-primary" onclick="join()">회원가입</button>
+            </div>
+            <div class="switch-auth">
+                이미 계정이 있으신가요? <a onclick="showSection('section-login')">로그인</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 악보 목록 -->
+    <div class="section" id="section-sheets">
+        <div class="sheet-header">
+            <h2>악보 목록</h2>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="곡 제목으로 검색..." onkeydown="if(event.key==='Enter')searchSheets()" />
+            <button class="btn-ghost" onclick="searchSheets()">검색</button>
+            <button class="btn-ghost" onclick="loadSheets()">전체</button>
+        </div>
+        <div class="sheet-grid" id="sheet-list"></div>
+    </div>
+
+    <!-- 내 댓글 -->
+    <div class="section" id="section-my-comments">
+        <div class="sheet-header">
+            <h2>내 댓글</h2>
+            <button class="btn-ghost" onclick="showSection('section-sheets'); loadSheets();">← 악보 목록</button>
+        </div>
+        <div id="my-comment-list"></div>
+    </div>
+</main>
+
+<!-- 악보 등록 모달 -->
+<div class="modal-overlay" id="modal-add-sheet">
+    <div class="modal">
+        <h3>악보 등록</h3>
+        <div class="form-group">
+            <label>곡 제목</label>
+            <input type="text" id="sheet-title" placeholder="Blinding Lights" />
+        </div>
+        <div class="form-group">
+            <label>아티스트</label>
+            <input type="text" id="sheet-artist" placeholder="The Weeknd" />
+        </div>
+        <div class="modal-actions">
+            <button class="btn-ghost" onclick="closeModal('modal-add-sheet')">취소</button>
+            <button class="btn-primary" onclick="addSheet()">등록</button>
+        </div>
+    </div>
+</div>
+
+<!-- 댓글 모달 -->
+<div class="modal-overlay" id="modal-comments">
+    <div class="modal">
+        <h3 id="modal-sheet-title"></h3>
+        <div class="divider"></div>
+        <div class="form-group">
+            <label>댓글 작성</label>
+            <input type="text" id="comment-input" placeholder="댓글을 입력하세요..." onkeydown="if(event.key==='Enter')addComment()" />
+        </div>
+        <button class="btn-primary" onclick="addComment()" style="width:100%">댓글 달기</button>
+        <div class="comment-list" id="comment-list"></div>
+        <div class="modal-actions">
+            <button class="btn-ghost" onclick="closeModal('modal-comments')">닫기</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const API = '';
+    let token = localStorage.getItem('token') || '';
+    let currentUser = localStorage.getItem('username') || '';
+    let currentSheetId = null;
+    let isSubmitting = false;
+
+    window.onload = () => {
+        if (token) {
+            showLoggedIn();
+            loadSheets();
+        }
+    };
+
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function showLoggedIn() {
+        document.getElementById('username-display').textContent = currentUser;
+        document.getElementById('logout-btn').style.display = '';
+        document.getElementById('add-sheet-btn').style.display = '';
+        document.getElementById('my-comments-btn').style.display = '';
+        showSection('section-sheets');
+    }
+
+    function logout() {
+        token = '';
+        currentUser = '';
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
+        document.getElementById('username-display').textContent = '';
+        document.getElementById('logout-btn').style.display = 'none';
+        document.getElementById('add-sheet-btn').style.display = 'none';
+        document.getElementById('my-comments-btn').style.display = 'none';
+        showSection('section-login');
+    }
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast ${type} show`;
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function openAddSheet() { document.getElementById('modal-add-sheet').classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    async function join() {
+        const username = document.getElementById('join-username').value.trim();
+        const password = document.getElementById('join-password').value.trim();
+        if (!username || !password) return showToast('아이디와 비밀번호를 입력해주세요.', 'error');
+        const res = await fetch(`${API}/sheetHub/join`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        if (res.ok) {
+            showToast('회원가입 완료! 로그인해주세요.');
+            showSection('section-login');
+        } else {
+            showToast(await res.text() || '회원가입 실패', 'error');
+        }
+    }
+
+    async function login() {
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+        if (!username || !password) return showToast('아이디와 비밀번호를 입력해주세요.', 'error');
+        const res = await fetch(`${API}/sheetHub/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        if (res.ok) {
+            token = await res.text();
+            currentUser = username;
+            localStorage.setItem('token', token);
+            localStorage.setItem('username', username);
+            showToast(`환영합니다, ${username}!`);
+            showLoggedIn();
+            loadSheets();
+        } else {
+            showToast(await res.text() || '로그인 실패', 'error');
+        }
+    }
+
+    async function loadSheets() {
+        const res = await fetch(`${API}/sheetHub/sheets`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        renderSheets(await res.json());
+    }
+
+    async function searchSheets() {
+        const title = document.getElementById('search-input').value.trim();
+        if (!title) return loadSheets();
+        const res = await fetch(`${API}/sheetHub/sheets?title=${encodeURIComponent(title)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        renderSheets(await res.json());
+    }
+
+    function renderSheets(sheets) {
+        const el = document.getElementById('sheet-list');
+        if (!sheets.length) {
+            el.innerHTML = `<div class="empty-state"><div class="icon">🥁</div><p>악보가 없습니다.</p></div>`;
+            return;
+        }
+        el.innerHTML = sheets.map(s => `
+      <div class="sheet-card" onclick="openComments(${s.id}, '${escHtml(s.title)}')">
+        <div class="sheet-card-info">
+          <h3>${escHtml(s.title)}</h3>
+          <span>${escHtml(s.artist)}</span>
+        </div>
+        <div class="sheet-card-actions" onclick="event.stopPropagation()">
+          <button class="btn-danger" onclick="deleteSheet(${s.id})">삭제</button>
+        </div>
+      </div>
+    `).join('');
+    }
+
+    async function addSheet() {
+        const title = document.getElementById('sheet-title').value.trim();
+        const artist = document.getElementById('sheet-artist').value.trim();
+        if (!title || !artist) return showToast('제목과 아티스트를 입력해주세요.', 'error');
+        const res = await fetch(`${API}/sheetHub/sheets`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ title, artist })
+        });
+        if (res.ok) {
+            showToast('악보 등록 완료!');
+            closeModal('modal-add-sheet');
+            document.getElementById('sheet-title').value = '';
+            document.getElementById('sheet-artist').value = '';
+            loadSheets();
+        } else {
+            showToast(await res.text() || '악보 등록 실패', 'error');
+        }
+    }
+
+    async function deleteSheet(id) {
+        if (!confirm('삭제할까요?')) return;
+        const res = await fetch(`${API}/sheetHub/sheets/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) { showToast('삭제됐어요.'); loadSheets(); }
+        else showToast('삭제 실패', 'error');
+    }
+
+    async function openComments(sheetId, title) {
+        currentSheetId = sheetId;
+        document.getElementById('modal-sheet-title').textContent = title;
+        document.getElementById('modal-comments').classList.add('open');
+        loadComments(sheetId);
+    }
+
+    async function loadComments(sheetId) {
+        const res = await fetch(`${API}/sheetHub/sheets/${sheetId}/comments`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const comments = await res.json();
+        const el = document.getElementById('comment-list');
+        if (!comments.length) {
+            el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">첫 댓글을 달아보세요!</div>`;
+            return;
+        }
+        el.innerHTML = comments.map(c => `
+      <div class="comment-item" id="comment-${c.id}">
+        <div class="comment-content">
+          <div class="comment-author">${escHtml(c.name)}</div>
+          <div class="comment-text" id="comment-text-${c.id}">${escHtml(c.comment)}</div>
+          <input class="edit-input" id="edit-input-${c.id}" style="display:none" value="${escHtml(c.comment)}"
+            onkeydown="if(event.key==='Enter')submitEdit(${c.id})" />
+        </div>
+        <div class="comment-btns">
+          <button class="btn-sm" id="edit-btn-${c.id}" onclick="toggleEdit(${c.id})">수정</button>
+          <button class="btn-danger" onclick="deleteComment(${c.id})">삭제</button>
+        </div>
+      </div>
+    `).join('');
+    }
+
+    function toggleEdit(commentId) {
+        const text = document.getElementById(`comment-text-${commentId}`);
+        const input = document.getElementById(`edit-input-${commentId}`);
+        const btn = document.getElementById(`edit-btn-${commentId}`);
+        const isEditing = input.style.display !== 'none';
+        if (isEditing) {
+            submitEdit(commentId);
+        } else {
+            text.style.display = 'none';
+            input.style.display = 'block';
+            input.focus();
+            btn.textContent = '완료';
+        }
+    }
+
+    async function submitEdit(commentId) {
+        const input = document.getElementById(`edit-input-${commentId}`);
+        const comment = input.value.trim();
+        if (!comment) return;
+        const res = await fetch(`${API}/sheetHub/sheets/${currentSheetId}/comments/${commentId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ comment })
+        });
+        if (res.ok) {
+            showToast('수정됐어요.');
+            loadComments(currentSheetId);
+        } else {
+            showToast('수정 실패', 'error');
+        }
+    }
+
+    async function addComment() {
+        if (isSubmitting) return;
+        const comment = document.getElementById('comment-input').value.trim();
+        if (!comment) return;
+        isSubmitting = true;
+        const res = await fetch(`${API}/sheetHub/sheets/${currentSheetId}/comments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ comment })
+        });
+        isSubmitting = false;
+        if (res.ok) {
+            document.getElementById('comment-input').value = '';
+            loadComments(currentSheetId);
+        } else {
+            showToast('댓글 등록 실패', 'error');
+        }
+    }
+
+    async function deleteComment(commentId) {
+        const res = await fetch(`${API}/sheetHub/sheets/${currentSheetId}/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) loadComments(currentSheetId);
+        else showToast('삭제 실패', 'error');
+    }
+
+    async function showMyComments() {
+        showSection('section-my-comments');
+        const res = await fetch(`${API}/sheetHub/members/comments`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const comments = await res.json();
+        const el = document.getElementById('my-comment-list');
+        if (!comments.length) {
+            el.innerHTML = `<div class="empty-state"><div class="icon">💬</div><p>작성한 댓글이 없습니다.</p></div>`;
+            return;
+        }
+        el.innerHTML = comments.map(c => `
+      <div class="my-comment-item">
+        <div class="comment-id">#${c.commentId}</div>
+        <div>${escHtml(c.comment)}</div>
+      </div>
+    `).join('');
+    }
+
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+</script>
+</body>
+</html>

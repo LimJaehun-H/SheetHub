@@ -3,6 +3,7 @@ package com.jaehun.SheetHub.controller;
 import com.jaehun.SheetHub.domain.sheetdto.CreateSheetDto;
 import com.jaehun.SheetHub.domain.sheetdto.ResponseSheetDto;
 import com.jaehun.SheetHub.service.SheetService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,7 +15,7 @@ public class SheetController {
     private final SheetService sheetService;
 
     @PostMapping("/sheetHub/sheets")
-    public ResponseSheetDto addSheet(@RequestBody CreateSheetDto dto){
+    public ResponseSheetDto addSheet(@Valid @RequestBody CreateSheetDto dto){
         return sheetService.save(dto);
     }
 
