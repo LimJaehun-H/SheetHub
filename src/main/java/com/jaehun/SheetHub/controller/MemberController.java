@@ -2,7 +2,6 @@ package com.jaehun.SheetHub.controller;
 
 import com.jaehun.SheetHub.domain.memberdto.CreateMemberDto;
 import com.jaehun.SheetHub.domain.memberdto.LoginMemberDto;
-import com.jaehun.SheetHub.repository.MemberRepository;
 import com.jaehun.SheetHub.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -92,4 +92,13 @@ public class CommentService {
                 .map(c->new ResponseMyCommentsDto(c.getId(), c.getComment()))
                 .collect(Collectors.toList());
     }
+
+    // 특정 악보의 댓글 조회하기
+    public List<ResponseCommentDto> findCommentOfSheet(Long sheetId){
+        Sheet sheet = sheetRepository.findById(sheetId)
+                .orElseThrow(() -> new NotFoundException("악보를 찾지 못했습니다."));
+        return sheet.getComments().stream()
+                .map(c-> new ResponseCommentDto(c.getId(), c.getComment(), c.getMember().getUsername()))
+                .collect(Collectors.toList());
+    }
 }

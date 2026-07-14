@@ -21,6 +21,8 @@ public class Sheet {
     @OneToMany(mappedBy = "sheet")
     private List<Comment> comments = new ArrayList<>();
 
+    private String filePath;
+
     private String title;
     private String artist;
 
@@ -31,5 +33,9 @@ public class Sheet {
         this.member = member;
         this.title = title;
         this.artist = artist;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 }

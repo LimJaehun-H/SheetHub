@@ -40,4 +40,10 @@ public class CommentController {
     public List<ResponseMyCommentsDto> getMyComments() {
         return commentService.findMyComments();
     }
+
+    // 악보당 댓글 조회
+    @GetMapping("/sheetHub/sheets/{sheetId}/comments")
+    public List<ResponseCommentDto> getCommentsOfEachSheet(@PathVariable Long sheetId) {
+        return commentService.findCommentOfSheet(sheetId);
+    }
 }

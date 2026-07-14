@@ -5,8 +5,12 @@ import com.jaehun.SheetHub.domain.sheetdto.ResponseSheetDto;
 import com.jaehun.SheetHub.service.SheetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -15,8 +19,19 @@ public class SheetController {
     private final SheetService sheetService;
 
     @PostMapping("/sheetHub/sheets")
-    public ResponseSheetDto addSheet(@Valid @RequestBody CreateSheetDto dto){
-        return sheetService.save(dto);
+    public ResponseSheetDto addSheet(
+            @RequestParam String title,
+            @RequestParam String artist,
+            @RequestParam MultipartFile file) throws IOException {
+        return sheetService.save(title, artist, file);
+    }
+
+    @GetMapping("/sheetHub/sheets/{id}/file")
+    public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) throws IOException {
+        byte[] file = sheetService.downloadFile(id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"file\"")
+                .body(file);
     }
 
 //    @GetMapping("/sheetHub/sheets")
