@@ -1,40 +1,50 @@
 # SheetHub 🥁
-
 드럼 악보 공유 사이트 백엔드 API
 
 ## 기술 스택
-
-- Java 25
-- Spring Boot 4.1.0
+- Java 21
+- Spring Boot 3.x
 - Spring Security + JWT
 - Spring Data JPA
 - H2 / MySQL
 - Lombok
 
-## 실행 방법
+---
 
-1. H2 콘솔 실행
-2. `application.properties` DB 설정 확인
-3. 서버 실행 (`localhost:8080`)
+## 실행 방법
+1. `application.properties` DB 설정 확인
+2. 서버 실행 (`localhost:8080`)
+3. H2 콘솔: `localhost:8080/h2-console`
 
 ---
 
-## API 명세
+## 사용 흐름
 
-### 인증
-`/join`, `/login` 을 제외한 모든 API는 JWT 인증이 필요합니다.
+SheetHub API는 아래 순서로 사용합니다.
 
-요청 헤더에 아래와 같이 토큰을 넣어주세요.
 ```
-Authorization: Bearer {토큰}
+1. 회원가입        POST /sheetHub/join
+2. 로그인          POST /sheetHub/login  →  JWT 토큰 발급
+3. 토큰을 헤더에 담아 이후 API 호출
+       Authorization: Bearer {토큰}
+4. 악보 등록/조회/삭제
+5. 댓글 등록/수정/삭제
 ```
 
-### 에러 코드
+> `/join`, `/login` 을 제외한 모든 API는 JWT 인증이 필요합니다.
+> 수정/삭제는 본인이 작성한 것만 가능합니다.
+
+---
+
+## 에러 코드
+
 | 코드 | 설명 |
 |---|---|
+| 400 | 입력값 오류 (필수 항목 누락 등) |
 | 401 | 인증 실패 (토큰 없음 / 만료 / 비밀번호 틀림) |
-| 403 | 권한 없음 |
+| 403 | 권한 없음 (본인 것이 아닌 리소스 수정/삭제 시도) |
 | 404 | 리소스 없음 |
+| 409 | 중복 (이미 존재하는 username) |
 
 ---
 
@@ -45,7 +55,7 @@ Authorization: Bearer {토큰}
 - Request
 ```json
 {
-  "username": "jaehun",
+  "username": "test",
   "password": "1234"
 }
 ```
@@ -56,7 +66,7 @@ Authorization: Bearer {토큰}
 - Request
 ```json
 {
-  "username": "jaehun",
+  "username": "test",
   "password": "1234"
 }
 ```
@@ -113,7 +123,7 @@ eyJhbGciOiJIUzI1NiJ9...
 ]
 ```
 
-### 악보 삭제
+### 악보 삭제 (본인만 가능)
 - **DELETE** `/sheetHub/sheets/{id}`
 - Response: `200 OK`
 
@@ -126,36 +136,36 @@ eyJhbGciOiJIUzI1NiJ9...
 - Request
 ```json
 {
-  "comment": "드럼 파트 너무 좋다"
+  "comment": "test comment"
 }
 ```
 - Response: `200 OK`
 ```json
 {
   "id": 1,
-  "comment": "드럼 파트 너무 좋다",
-  "name": "jaehun"
+  "comment": "test comment",
+  "name": "test"
 }
 ```
 
-### 댓글 수정
+### 댓글 수정 (본인만 가능)
 - **PUT** `/sheetHub/sheets/{sheetId}/comments/{commentId}`
 - Request
 ```json
 {
-  "comment": "드럼 파트 진짜 미쳤다"
+  "comment": "test comment updated"
 }
 ```
 - Response: `200 OK`
 ```json
 {
   "id": 1,
-  "comment": "드럼 파트 진짜 미쳤다",
-  "name": "jaehun"
+  "comment": "test comment updated",
+  "name": "test"
 }
 ```
 
-### 댓글 삭제
+### 댓글 삭제 (본인만 가능)
 - **DELETE** `/sheetHub/sheets/{sheetId}/comments/{commentId}`
 - Response: `200 OK`
 
@@ -166,7 +176,7 @@ eyJhbGciOiJIUzI1NiJ9...
 [
   {
     "commentId": 1,
-    "comment": "드럼 파트 너무 좋다"
+    "comment": "test comment"
   }
 ]
 ```
